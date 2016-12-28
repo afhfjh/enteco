@@ -1,0 +1,92 @@
+  --CREATE OR REPLACE VIEW "ANALESTA"."ANE_ORDENES_DE_TRABAJO_P7" AS 
+  SELECT O.EMPRESA, O.NUMERO NUMERO_OT, O.ANNO ANNO_OT, O.SITUACIO, O.FEC_MODI FECHA_MODIFICACION_OT, TO_CHAR(O.FEC_MODI,'YYYY') ANNO_MODIFICACION_OT, TO_CHAR(O.FEC_MODI,'MM') MES_MODIFICACION_OT,
+         CL.CLIENTE_ID, CL.RAZON_SOC, CL.VENDEDOR, CL.TIPO_VENDEDOR, CL.DESCRIPCION_VENEDEDOR, CL.VENCIMIENTO_FX,
+         O.TIP_ARTI TIP_ARTI_OT, O.COD_ARTI COD_ARTI_OT, A.DESCRIPCION DESCRIPCION_ARTICULO_OT, O.MODI MODIFICACION, O.REVI REVISION, DECODE(O.TIP_ARTI,P_Utilidad.F_ValoDeva('TIARFIF4'), DECODE(SUBSTR(O.COD_ARTI,3,1), P_Utilidad.F_ValoDeva('TIPOPROY'), 'ANONIMO', 'IMPRESO')) TIPO_ARTICULO,
+         P_GNR_AGRUESTR.F_ASIGNA_AGRUESTR(O.EMPRESA, SUBSTR(O.COD_ARTI,4,4),O.TIP_ARTI, O.COD_ARTI) AGRUPACION_ESTRATEGICA,
+         O.NUMEPEDI PEDIDO_OT, O.LINEPEDI LINEA_PEDIDO_OT, NVL(LP.TIPOPEDI,'NE') TIPO_DE_PEDIDO, P.REFEENPM REFERENCIA_PEDIDO_MATRIZ_OT, 
+         P.DIREENVI CODIGO_DIRECCION_ENVIO, P.PAIS CODIGO_PAIS_DIREC_ENVIO_PEDIDO, P.NOMBRE PAIS_DIREC_ENVIO_PEDIDO, CL.PAIS CODIGO_PAIS_CLIENTE, CL.DESCRIPCION_PAIS PAIS_CLIENTE, 
+         DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS) CODIGO_PAIS_ENTREGA, DECODE(P.NOMBRE, NULL,CL.DESCRIPCION_PAIS,P.NOMBRE) PAIS_ENTREGA, DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,'N',P_Utilidad.F_ValoDeva('PAISESPA'),'N','E') TIPO_PEDIDO,
+         O.CANTCERR CANTIDAD_CERRADA_OT, O.UNIDAD UNIDAD_CERRADA_OT, 
+         DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                         P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                         P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000)))) FACTOR_ML_CIERRE_OT_FX, 
+         O.CANTCERR * 
+         DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                         P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                         P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000))))
+         CANTIDAD_CERRADA_OT_ML,
+         DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                               P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                               P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000) FACTOR_M2_CIERRE_OT_FX,
+         O.CANTCERR *
+         DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                               P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                               P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000)
+         CANTIDAD_CERRADA_OT_M2,
+         O.NUMEOTTE NUMERO_OTT, O.ANNOOTTE ANNO_OTT,
+         NVL(MPC.VALOR,'N') MATERIAL_PROPIEDAD_CLIENTE,
+         FI.ANCHO, FI.LARGO, FI.MATBASE, FI.DESCRIPCION DESCRIPCION_MATBASE, SUBSTR(FI.MATBASE,1,2) LINEA, LIN.DESCRIPCION DESCRIPCION_LINEA,
+-------------------------- 
+--Vista 7
+         MP.MERMA MERMA_PLANIFICACION
+--Fin Vista n
+         FROM FIC_CABEOTRE O, ARTICULO A, ANALESTA.ANE_CLIENTES CL, GNR_LINEAS LIN,
+--Vista 7    
+              ANALESTA.ANE_MER_MERMAS_PLANIF_OT MP,
+--Fin Vista 7         
+              (
+               SELECT F.EMPRESA, F.TIP_ARTI, F.PRODUCTO, F.MODI, F.REVI, F.ANCHO, F.LARGO, F.MATBASE, L.FCKG, L.DESCRIPCION FROM HFICTEC F, LFS L
+               WHERE F.EMPRESA = L.EMPRESA
+                 AND F.MATBASE = L.COD_LFS
+               UNION
+               SELECT F.EMPRESA, F.TIP_ARTI, F.PRODUCTO, F.MODI, F.REVI, F.ANCHO, F.LARGO, F.MATBASE, L.FCKG, L.DESCRIPCION FROM FIC_SEGESTI F, LFS L
+               WHERE F.EMPRESA = L.EMPRESA
+                 AND F.MATBASE = L.COD_LFS
+              ) FI,
+              (SELECT CP.EMPRESA, CP.NUMEPEDI, NULL REFEENPM, CP.DIREENVI, DE.PAIS, DE.NOMBRE
+               FROM FIC_CABEPEDI CP, 
+                    (SELECT DE.EMPRESA, DE.CLIENTE_ID, DE.LINEA, DE.PAIS, PA.NOMBRE FROM GNR_CLDIRENV DE, GNR_PAISES PA
+                     WHERE DE.PAIS = PA.PAIS(+)) DE
+               WHERE CP.EMPRESA = DE.EMPRESA(+)
+                 AND CP.CLIENTE_ID = DE.CLIENTE_ID(+)
+                 AND CP.DIREENVI = DE.LINEA(+)
+               UNION
+               SELECT CP.EMPRESA, CP.NUMEPEDI, NULL REFEENPM, CP.DIREENVI, DE.PAIS, DE.NOMBRE
+               FROM FIC_HICAPEVE CP, 
+                    (SELECT DE.EMPRESA, DE.CLIENTE_ID, DE.LINEA, DE.PAIS, PA.NOMBRE FROM GNR_CLDIRENV DE, GNR_PAISES PA
+                     WHERE DE.PAIS = PA.PAIS(+)) DE
+               WHERE CP.EMPRESA = DE.EMPRESA(+)
+                 AND CP.CLIENTE_ID = DE.CLIENTE_ID(+)
+                 AND CP.DIREENVI = DE.LINEA(+)
+               UNION
+               SELECT CP.EMPRESA, CP.NUMEPEDI, CP.REFEENPM, NULL DIREENVI, NULL PAIS, NULL NOMBRE FROM FIC_CABEPEMA CP) P,
+              (SELECT EMPRESA, NUMERO, ANNO, VALOR FROM FIC_LICHOBOT
+               WHERE CODIGO = P_Utilidad.F_ValoDeva('COOTPEPC')) MPC,
+              (SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_LINEPEDI
+               UNION 
+               SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_HILIPEVE
+               UNION
+               SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_LINEPEMA) LP
+         WHERE O.EMPRESA = A.EMPRESA
+           AND O.TIP_ARTI = A.TIP_ARTI
+           AND O.COD_ARTI = A.COD_ARTI
+           AND O.EMPRESA = P.EMPRESA(+)
+           AND O.NUMEPEDI = P.NUMEPEDI(+)
+           AND O.EMPRESA = MPC.EMPRESA(+)
+           AND O.NUMERO = MPC.NUMERO(+)
+           AND O.ANNO = MPC.ANNO(+)
+           AND O.EMPRESA = LP.EMPRESA(+)
+           AND O.NUMEPEDI = LP.NUMEPEDI(+)
+           AND O.LINEPEDI = LP.LINEPEDI(+)
+           AND A.EMPRESA = CL.EMPRESA(+)
+           AND A.CLIENASOC = CL.CLIENTE_ID(+)
+           AND O.EMPRESA = FI.EMPRESA(+)
+           AND O.TIP_ARTI = FI.TIP_ARTI(+)
+           AND O.COD_ARTI = FI.PRODUCTO(+)
+           AND NVL(O.MODI,0) = NVL(FI.MODI(+),0)
+           AND NVL(O.REVI,0) = NVL(FI.REVI(+),0)
+           AND SUBSTR(FI.MATBASE,1,2) = LIN.LINEA
+--Vista 7
+           AND O.EMPRESA = MP.EMPRESA(+) 
+           AND O.NUMERO = MP.NUMEOTRE(+)
+--Fin Vista 7

@@ -1,0 +1,554 @@
+  CREATE OR REPLACE VIEW "ANALESTA"."ANE_ORDENES_DE_TRABAJO_SIN_SUM" AS 
+  SELECT O.EMPRESA, O.NUMERO NUMERO_OT, O.ANNO ANNO_OT, O.SITUACIO, O.FEC_MODI FECHA_MODIFICACION_OT, TO_CHAR(O.FEC_MODI,'YYYY') ANNO_MODIFICACION_OT, TO_CHAR(O.FEC_MODI,'MM') MES_MODIFICACION_OT,
+                CL.CLIENTE_ID, CL.RAZON_SOC, CL.VENDEDOR, CL.TIPO_VENDEDOR, CL.DESCRIPCION_VENEDEDOR, CL.VENCIMIENTO_FX,
+                O.TIP_ARTI TIP_ARTI_OT, O.COD_ARTI COD_ARTI_OT, A.DESCRIPCION DESCRIPCION_ARTICULO_OT, O.MODI MODIFICACION, O.REVI REVISION, DECODE(O.TIP_ARTI,P_Utilidad.F_ValoDeva('TIARFIF4'), DECODE(SUBSTR(O.COD_ARTI,3,1), P_Utilidad.F_ValoDeva('TIPOPROY'), 'ANONIMO', 'IMPRESO')) TIPO_ARTICULO,
+                P_GNR_AGRUESTR.F_ASIGNA_AGRUESTR(O.EMPRESA, SUBSTR(O.COD_ARTI,4,4),O.TIP_ARTI, O.COD_ARTI) AGRUPACION_ESTRATEGICA,
+                O.NUMEPEDI PEDIDO_OT, O.LINEPEDI LINEA_PEDIDO_OT, NVL(LP.TIPOPEDI,'NE') TIPO_DE_PEDIDO, P.REFEENPM REFERENCIA_PEDIDO_MATRIZ_OT, 
+                P.DIREENVI CODIGO_DIRECCION_ENVIO, P.PAIS CODIGO_PAIS_DIREC_ENVIO_PEDIDO, P.NOMBRE PAIS_DIREC_ENVIO_PEDIDO, CL.PAIS CODIGO_PAIS_CLIENTE, CL.DESCRIPCION_PAIS PAIS_CLIENTE, 
+                DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS) CODIGO_PAIS_ENTREGA, DECODE(P.NOMBRE, NULL,CL.DESCRIPCION_PAIS,P.NOMBRE) PAIS_ENTREGA, DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,'N',P_Utilidad.F_ValoDeva('PAISESPA'),'N','E') TIPO_PEDIDO,
+                O.CANTCERR CANTIDAD_CERRADA_OT, O.UNIDAD UNIDAD_CERRADA_OT, 
+                DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                               P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                               P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000)))) FACTOR_ML_CIERRE_OT_FX, 
+                O.CANTCERR * 
+                DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                               P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                               P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000))))
+                CANTIDAD_CERRADA_OT_ML,
+                DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000) FACTOR_M2_CIERRE_OT_FX,
+                O.CANTCERR *
+                DECODE(O.UNIDAD,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000)
+                CANTIDAD_CERRADA_OT_M2,
+                O.NUMEOTTE NUMERO_OTT, O.ANNOOTTE ANNO_OTT,
+                NVL(MPC.VALOR,'N') MATERIAL_PROPIEDAD_CLIENTE,
+                FI.ANCHO, FI.LARGO, FI.MATBASE, FI.DESCRIPCION DESCRIPCION_MATBASE, SUBSTR(FI.MATBASE,1,2) LINEA, LIN.DESCRIPCION DESCRIPCION_LINEA,
+                EX.VUCVEN UNIDAD_CIERRE_ALBARAN, EX.LPCANT CANTIDAD_CIERRE_ALBARAN,
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                                 P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                                 P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000)))) FACTOR_ML_CANT_CIERRE_ALBA_FX, 
+                EX.LPCANT * 
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNML'),1,DECODE(NVL(FI.ANCHO,0),0,0,DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG * (1000 / FI.ANCHO),
+                                                                                                                 P_Utilidad.F_ValoDeva('TIPOUNM2'),(1000 / FI.ANCHO),
+                                                                                                                 P_Utilidad.F_ValoDeva('TIPOUNUN'),(1000 / FI.ANCHO) * ((FI.ANCHO * FI.LARGO) / 1000000))))
+                CANTIDAD_CIERRE_ALBARAN_ML,
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000) FACTOR_M2_CANT_CIERRE_ALBA_FX,
+                EX.LPCANT *
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNM2'),1,P_Utilidad.F_ValoDeva('TIPOUNKG'),FI.FCKG,
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNML'),(FI.ANCHO / 1000),
+                                                                     P_Utilidad.F_ValoDeva('TIPOUNUN'),(FI.ANCHO * FI.LARGO) / 1000000)
+                CANTIDAD_CIERRE_ALBARAN_M2,
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNKG'),1,DECODE(NVL(FI.FCKG,0),0,0,DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNML'),(1 / FI.FCKG) * (FI.ANCHO / 1000),
+                                                                                                                P_Utilidad.F_ValoDeva('TIPOUNM2'),1 / FI.FCKG,
+                                                                                                                P_Utilidad.F_ValoDeva('TIPOUNUN'),(1 / FI.FCKG) * ((FI.ANCHO * FI.LARGO) / 1000000)))) FACTOR_KG_CANT_CIERRE_ALBA_FX,
+                EX.LPCANT *
+                DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNKG'),1,DECODE(NVL(FI.FCKG,0),0,0,DECODE(EX.VUCVEN,P_Utilidad.F_ValoDeva('TIPOUNML'),(1 / FI.FCKG) * (FI.ANCHO / 1000),
+                                                                                                                P_Utilidad.F_ValoDeva('TIPOUNM2'),1 / FI.FCKG,
+                                                                                                                P_Utilidad.F_ValoDeva('TIPOUNUN'),(1 / FI.FCKG) * ((FI.ANCHO * FI.LARGO) / 1000000))))
+                CANTIDAD_CIERRE_ALBARAN_KG,
+                ABO.IMPOABON IMPORTE_ABONO, ABO.IMPONUFA IMPO_ABONO_NUEVA_FACTURA, ABO.IMPORTE IMPO_ABONO_NETO_FX,
+                OABO.IMPOABON IMPORTE_OTROS_ABONO, OABO.IMPONUFA IMPO_OTROS_ABONO_NUEVA_FACTURA, OABO.IMPORTE IMPO_OTROS_ABONO_NETO_FX,
+                PRE.IMPORTE IMPORTE_VENTA, PRE.IVA IVA_VENTA, NVL(PRE.IMPORTE,0) - NVL(ABO.IMPORTE,0) INGRESOS_NETOS_FX,
+                --1. OPERACIONES DE INVERSION
+                DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,NULL,
+                (NVL(PRE.IMPORTE,0) - NVL(ABO.IMPORTE,0)) * --INGRESOS_NETOS_FX
+                PCFI.PORCEN_COST_FINANC_INVER_OT_FX) OPERACIONES_DE_INVERSION_1_FX,
+                --2. OPERACIONES DE CIRCULANTE
+                DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,NULL,
+                OPCI.PORCENTA) PORCENTA_OPERACIONES_CIRCULANT,
+                --nVaOpCirc_R := ((nCP_PRECIO_FAC + nCP_IVA_FAC) * (NVL(nOperCirc_R,0) / 100)) * (nVencimiento / 360);
+                DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,NULL,
+                ((NVL(PRE.IMPORTE,0) + NVL(PRE.IVA,0)) * (NVL(OPCI.PORCENTA,0) / 100)) * (CL.VENCIMIENTO_FX / 360)) OPERACIONES_DE_CIRCULANTE_2_FX,
+                --'COSTES FINANCIEROS','EUROS REAL'
+                --Coste de Seguro de Credito  + 1. + 2.
+         	      --nCP_COFIREAL := (nVaOpInve_R + nVaOpCirc_R);
+                --OPERACIONES_DE_INVERSION_1_FX
+                DECODE(DECODE(P.PAIS, NULL,CL.PAIS,P.PAIS),NULL,NULL,
+                ((NVL(PRE.IMPORTE,0) - NVL(ABO.IMPORTE,0)) * PCFI.PORCEN_COST_FINANC_INVER_OT_FX) +  
+                --OPERACIONES_DE_CIRCULANTE_2_FX
+                (((NVL(PRE.IMPORTE,0) + NVL(PRE.IVA,0)) * (NVL(OPCI.PORCENTA,0) / 100)) * (CL.VENCIMIENTO_FX / 360))) COSTE_SEGURO_CREDITO_1_2_FX,
+                MIMP.CANTPROD CANTPROD_IMPRESORA_CAL_VEL, TIMP.MINUTOS MINUTOS_IMPRESORA_CAT3, DECODE(NVL(TIMP.MINUTOS,0),0,NULL,MIMP.CANTPROD/TIMP.MINUTOS) VELOCIDAD_IMPRESORA_FX,
+                MLAM.CANTPROD CANTPROD_LAMINADORA_CAL_VEL, TLAM.MINUTOS MINUTOS_LAMINADORA_CAT3, DECODE(NVL(TLAM.MINUTOS,0),0,NULL,MLAM.CANTPROD/TLAM.MINUTOS) VELOCIDAD_LAMINADORA_FX, 
+                MLAQ.CANTPROD CANTPROD_LAQUEADORA_CAL_VEL, TLAQ.MINUTOS MINUTOS_LAQUEADORA_CAT3, DECODE(NVL(TLAQ.MINUTOS,0),0,NULL,MLAQ.CANTPROD/TLAQ.MINUTOS) VELOCIDAD_LAQUEADORA_FX, 
+                MCOR.CANTPROD CANTPROD_CORTADORA_CAL_VEL, TCOR.MINUTOS MINUTOS_CORTADORA_CAT3, DECODE(NVL(TCOR.MINUTOS,0),0,NULL,MCOR.CANTPROD/TCOR.MINUTOS) VELOCIDAD_CORTADORA_FX,
+                MMON.CANTPROD CANTPROD_MONTAJE_CAL_VEL, TMON.MINUTOS MINUTOS_MONTAJE_CAT3,
+                NVL(NUCA.NUMERO_CAPAS,0) + 1 NUMERO_CAPAS,
+                DECODE(NVL(TIMP_CM.MINUTOS,0),0,NULL,COSE_IMP.COSTE_SECCION_PRODUCTIVA) COSTE_SECCION_PRODUCTIVA_IMP, 
+                DECODE(NVL(TIMP_CM.MINUTOS,0),0,NULL,COSE_IMP.HORAS_SECCION_PRODUCTIVA) HORAS_SECCION_PRODUCTIVA_IMP, 
+                DECODE(NVL(TIMP_CM.MINUTOS,0),0,NULL,COSE_IMP.COSTE_HORA_FX) COSTE_HORA_IMP_FX,
+                MIMP_CM.CANTPROD CANTPROD_IMPRESORA_CAL_COS_MAQ, TIMP_CM.MINUTOS MINUTOS_IMPRESORA_CAT_2_3, 
+                DECODE(NVL(TIMP_CM.MINUTOS,0),0,NULL,COSE_IMP.COSTE_HORA_FX*(TIMP_CM.MINUTOS/60)) COSTE_TOTAL_IMP_FX,
+                DECODE(NVL(TLAM_CM.MINUTOS,0),0,NULL,COSE_LAM.COSTE_SECCION_PRODUCTIVA) COSTE_SECCION_PRODUCTIVA_LAM, 
+                DECODE(NVL(TLAM_CM.MINUTOS,0),0,NULL,COSE_LAM.HORAS_SECCION_PRODUCTIVA) HORAS_SECCION_PRODUCTIVA_LAM, 
+                DECODE(NVL(TLAM_CM.MINUTOS,0),0,NULL,COSE_LAM.COSTE_HORA_FX) COSTE_HORALAM_FX, 
+                MLAM_CM.CANTPROD CANTPROD_LAMINADOR_CAL_COS_MAQ, TLAM_CM.MINUTOS MINUTOS_LAMINADORA_CAT_2_3, 
+                DECODE(NVL(TLAM_CM.MINUTOS,0),0,NULL,COSE_LAM.COSTE_HORA_FX*(TLAM_CM.MINUTOS/60)) COSTE_TOTAL_LAM_FX,
+                DECODE(NVL(TLAQ_CM.MINUTOS,0),0,NULL,COSE_LAQ.COSTE_SECCION_PRODUCTIVA) COSTE_SECCION_PRODUCTIVA_LAQ, 
+                DECODE(NVL(TLAQ_CM.MINUTOS,0),0,NULL,COSE_LAQ.HORAS_SECCION_PRODUCTIVA) HORAS_SECCION_PRODUCTIVA_LAQ, 
+                DECODE(NVL(TLAQ_CM.MINUTOS,0),0,NULL,COSE_LAQ.COSTE_HORA_FX) COSTE_HORA_LAQ_FX, 
+                MLAQ_CM.CANTPROD CANTPROD_LAQUEADOR_CAL_COS_MAQ, TLAQ_CM.MINUTOS MINUTOS_LAQUEADORA_CAT_2_3,
+                DECODE(NVL(TLAQ_CM.MINUTOS,0),0,NULL,COSE_LAQ.COSTE_HORA_FX*(TLAQ_CM.MINUTOS/60)) COSTE_TOTAL_LAQ_FX,
+                DECODE(NVL(TCOR_CM.MINUTOS,0),0,NULL,COSE_COR.COSTE_SECCION_PRODUCTIVA) COSTE_SECCION_PRODUCTIVA_COR, 
+                DECODE(NVL(TCOR_CM.MINUTOS,0),0,NULL,COSE_COR.HORAS_SECCION_PRODUCTIVA) HORAS_SECCION_PRODUCTIVA_COR, 
+                DECODE(NVL(TCOR_CM.MINUTOS,0),0,NULL,COSE_COR.COSTE_HORA_FX) COSTE_HORA_COR_FX, 
+                MCOR_CM.CANTPROD CANTPROD_CORTADORA_CAL_COS_MAQ, TCOR_CM.MINUTOS MINUTOS_CORTADORA_CAT_2_3, 
+                DECODE(NVL(TCOR_CM.MINUTOS,0),0,NULL,COSE_COR.COSTE_HORA_FX*(TCOR_CM.MINUTOS/60)) COSTE_TOTAL_COR_FX,
+                PMON_CM.PARTICIPACION PARTICIPACION_MONTAJE,
+                DECODE(NVL(PMON_CM.PARTICIPACION,'X'),'X',NULL,COSE_MON.COSTE_SECCION_PRODUCTIVA) COSTE_SECCION_PRODUCTIVA_MON, 
+                DECODE(NVL(PMON_CM.PARTICIPACION,'X'),'X',NULL,COSE_MON.NUMERO_OTS_IMPRESAS) NUMERO_OTS_IMPRESAS_MON, 
+                DECODE(NVL(PMON_CM.PARTICIPACION,'X'),'X',NULL,COSE_MON.COSTE_HORA_FX) COSTE_TOTAL_MON_FX,
+                MAA.COSTE_BOBINAS_FX MAT_AUX_AGRU_FX,
+                NVL(MAE.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)+NVL(MAEG.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0) +
+                NVL(DECODE(O.TIP_ARTI,P_Utilidad.F_ValoDeva('TIARFIF4'), DECODE(SUBSTR(O.COD_ARTI,3,1), P_Utilidad.F_ValoDeva('TIPOPROX'),NVL(MAEI.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)+NVL(MAEGI.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0), 
+                                                                                                        P_Utilidad.F_ValoDeva('TIPOPROZ'),NVL(MAEI.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)+NVL(MAEGI.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0))),0) + 
+                DECODE(NVL(OLQ.NUMERO_MATERIALES,0),0,0,NVL(MAELQ.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)+NVL(MAEGLQ.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)) + 
+                DECODE(NVL(OLA.NUMERO_MATERIALES,0),0,0,NVL(MAELA.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0)+NVL(MAEGLA.COSTE_TOTAL_CONTRA_INDUCTOR_FX,0))
+                MAT_AUXILIARES_FX--,
+                --CHP.COSTE_HORA_PREIMPRESION_FX
+         FROM FIC_CABEOTRE O, ARTICULO A, ANALESTA.ANE_CLIENTES CL, GNR_LINEAS LIN,
+              ANALESTA.ANE_PORCEN_COST_FINAN_INVER_OT PCFI,  
+              ANALESTA.ANE_OPERACIONES_CIRCULANTE OPCI,
+              ANALESTA.ANE_COS_SECC_PROD_ANNO_MES_CER COSE_IMP,
+              ANALESTA.ANE_COS_SECC_PROD_ANNO_MES_CER COSE_COR,
+              ANALESTA.ANE_COS_SECC_PROD_ANNO_MES_CER COSE_LAM,
+              ANALESTA.ANE_COS_SECC_PROD_ANNO_MES_CER COSE_LAQ,
+              ANALESTA.ANE_COS_SECC_PROD_ANNO_MES_CER COSE_MON,
+              --ANALESTA.ANE_ANAL_COSTE_HORA_PREIMPRESI CHP,
+              (SELECT L.EMPRESA, L.NUMERO, L.ANNO, COUNT(*) NUMERO_MATERIALES
+               FROM FIC_LINEOTRE L
+               WHERE (INSTR(L.COD_ARES,'LAQUEADORA') != 0) OR
+                     (L.TIP_ARES = p_Utilidad.F_ValoDeva('TIARMPF4') AND 
+                       EXISTS (SELECT 'X' FROM VALORES_LISTA MLT 
+                         WHERE MLT.CODIGO = 'FIC_TERMMALA' 
+                           AND MLT.VALOR = SUBSTR(L.COD_ARES,-1))) OR
+                     (L.TIP_ARES = p_Utilidad.F_ValoDeva('TIARSEF4') AND 
+                       EXISTS (SELECT 'X' FROM VALORES_LISTA MLT 
+                         WHERE MLT.CODIGO = 'FIC_LINEMALA' 
+                           AND MLT.VALOR = SUBSTR(L.COD_ARES,1,2)))
+                GROUP BY L.EMPRESA, L.NUMERO, L.ANNO) OLQ,
+              (SELECT L.EMPRESA, L.NUMERO, L.ANNO, COUNT(*) NUMERO_MATERIALES
+               FROM FIC_LINEOTRE L
+               WHERE (INSTR(L.COD_ARES,'LAMINADORA') != 0) OR
+                     (L.TIP_ARES = p_Utilidad.F_ValoDeva('TIARSEF4') AND 
+                       EXISTS (SELECT 'X' FROM VALORES_LISTA MLT 
+                         WHERE MLT.CODIGO = 'FIC_LINEMALA' 
+                           AND MLT.VALOR = SUBSTR(L.COD_ARES,1,2)))
+                GROUP BY L.EMPRESA, L.NUMERO, L.ANNO) OLA,
+              (SELECT ANNO, APLICA_A_EMPRESA_GRUPO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A TODOS LAS ESPECIALIDADES'
+               GROUP BY ANNO, APLICA_A_EMPRESA_GRUPO) MAE,
+              (SELECT ANNO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_EMPRESA_GRUPO = 'GR'
+                 AND APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A TODOS LAS ESPECIALIDADES'
+               GROUP BY ANNO) MAEG,
+              --
+              (SELECT ANNO, APLICA_A_EMPRESA_GRUPO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES IMPRESAS'
+               GROUP BY ANNO, APLICA_A_EMPRESA_GRUPO) MAEI,
+              (SELECT ANNO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_EMPRESA_GRUPO = 'GR'
+                 AND APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES IMPRESAS'
+               GROUP BY ANNO) MAEGI,
+              (SELECT ANNO, APLICA_A_EMPRESA_GRUPO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES LAQUEADAS'
+               GROUP BY ANNO, APLICA_A_EMPRESA_GRUPO) MAELQ,
+              (SELECT ANNO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_EMPRESA_GRUPO = 'GR'
+                 AND APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES LAQUEADAS'
+               GROUP BY ANNO) MAEGLQ,
+              (SELECT ANNO, APLICA_A_EMPRESA_GRUPO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES LAMINADAS'
+               GROUP BY ANNO, APLICA_A_EMPRESA_GRUPO) MAELA,
+              (SELECT ANNO, SUM(COSTE_TOTAL_CONTRA_INDUCTOR_FX) COSTE_TOTAL_CONTRA_INDUCTOR_FX FROM ANALESTA.ANE_AUXILIARES
+               WHERE APLICA_A_EMPRESA_GRUPO = 'GR'
+                 AND APLICA_A_TIPO_ESPECIALIDAD = 'APLICA A LAS ESPECIALIDADES LAMINADAS'
+               GROUP BY ANNO) MAEGLA,
+              --
+              (SELECT EMPRESA, NUMERO_OT, SUM(COSTE_BOBINAS_FX) COSTE_BOBINAS_FX 
+               FROM ANALESTA.ANE_FORMULAS_AUX_ACUMULADOS_OT 
+               GROUP BY EMPRESA, NUMERO_OT) MAA,--Materiales auxiliares agrupados
+              (SELECT EMPRESA, NUMERO, COUNT(*) NUMERO_CAPAS
+               FROM FIC_LINEOTRE  
+                  WHERE COD_ARES LIKE ('LAMINADORA%')
+               GROUP BY EMPRESA, NUMERO) NUCA,
+              (SELECT F.EMPRESA, F.NUMEOTRE, 
+                      SUM(F.MINUFINA-F.MINUINIC) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+                  WHERE F.EMPRESA = E.EMPRESA
+                    AND F.EVENTIPO = E.EVENTIPO
+                    AND F.EVENCODI = E.EVENCODI
+                    AND INSTR(E.EVENCATE,'.') != 0
+                    AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) = '3'
+                    AND F.MINUFINA IS NOT NULL
+                    AND F.MAQUCODI LIKE 'IMPRESORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TIMP,
+              (SELECT F.EMPRESA, F.NUMEOTRE, 
+                      SUM(F.MINUFINA-F.MINUINIC) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+                  WHERE F.EMPRESA = E.EMPRESA
+                    AND F.EVENTIPO = E.EVENTIPO
+                    AND F.EVENCODI = E.EVENCODI
+                    AND INSTR(E.EVENCATE,'.') != 0
+                    AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) = '3'
+                    AND F.MINUFINA IS NOT NULL
+                    AND F.MAQUCODI LIKE 'LAMINADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TLAM,
+              (SELECT F.EMPRESA, F.NUMEOTRE, 
+                      SUM(F.MINUFINA-F.MINUINIC) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+                  WHERE F.EMPRESA = E.EMPRESA
+                    AND F.EVENTIPO = E.EVENTIPO
+                    AND F.EVENCODI = E.EVENCODI
+                    AND INSTR(E.EVENCATE,'.') != 0
+                    AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) = '3'
+                    AND F.MINUFINA IS NOT NULL
+                    AND F.MAQUCODI LIKE 'LAQUEADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TLAQ,
+              (SELECT F.EMPRESA, F.NUMEOTRE, 
+                      SUM(F.MINUFINA-F.MINUINIC) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+                  WHERE F.EMPRESA = E.EMPRESA
+                    AND F.EVENTIPO = E.EVENTIPO
+                    AND F.EVENCODI = E.EVENCODI
+                    AND INSTR(E.EVENCATE,'.') != 0
+                    AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) = '3'
+                    AND F.MINUFINA IS NOT NULL
+                    AND F.MAQUCODI LIKE 'MONTAJE%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TMON,
+              (SELECT F.EMPRESA, F.NUMEOTRE, 
+                      SUM(F.MINUFINA-F.MINUINIC) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+                  WHERE F.EMPRESA = E.EMPRESA
+                    AND F.EVENTIPO = E.EVENTIPO
+                    AND F.EVENCODI = E.EVENCODI
+                    AND INSTR(E.EVENCATE,'.') != 0
+                    AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) = '3'
+                    AND F.MINUFINA IS NOT NULL
+                    AND F.MAQUCODI LIKE 'CORTADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TCOR,
+              (SELECT P.EMPRESA, P.NUMEOTRE, 
+                      SUM(P.CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU P
+               WHERE P.MAQUCODI LIKE 'IMPRESORA%'
+               GROUP BY P.EMPRESA, P.NUMEOTRE) MIMP,
+              (SELECT P.EMPRESA, P.NUMEOTRE, 
+                      SUM(P.CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU P
+               WHERE P.MAQUCODI LIKE 'LAMINADORA%'
+               GROUP BY P.EMPRESA, P.NUMEOTRE) MLAM,
+              (SELECT P.EMPRESA, P.NUMEOTRE, 
+                      SUM(P.CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU P
+               WHERE P.MAQUCODI LIKE 'LAQUEADORA%'
+               GROUP BY P.EMPRESA, P.NUMEOTRE) MLAQ,
+              (SELECT P.EMPRESA, P.NUMEOTRE, 
+                      SUM(P.CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU P
+               WHERE P.MAQUCODI LIKE 'MONTAJE%'
+               GROUP BY P.EMPRESA, P.NUMEOTRE) MMON,
+              (SELECT P.EMPRESA, P.NUMEOTRE, 
+                      SUM(DECODE(MARCPASA,'S',0,P.CANTPROD)) CANTPROD
+               FROM PRD_PASAMAQU P
+               WHERE P.MAQUCODI LIKE 'CORTADORA%'
+               GROUP BY P.EMPRESA, P.NUMEOTRE) MCOR,
+--
+              (SELECT F.EMPRESA, F.NUMEOTRE, TO_CHAR(SUM(F.MINUFINA-F.MINUINIC)) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+               WHERE F.EMPRESA = E.EMPRESA
+                 AND F.EVENTIPO = E.EVENTIPO
+                 AND F.EVENCODI = E.EVENCODI
+                 AND INSTR(E.EVENCATE,'.') != 0
+                 AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) IN ('2','3')
+                 AND F.MINUFINA IS NOT NULL
+                 AND F.MAQUCODI LIKE 'IMPRESORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TIMP_CM,
+              (SELECT F.EMPRESA, F.NUMEOTRE, TO_CHAR(SUM(F.MINUFINA-F.MINUINIC)) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+               WHERE F.EMPRESA = E.EMPRESA
+                 AND F.EVENTIPO = E.EVENTIPO
+                 AND F.EVENCODI = E.EVENCODI
+                 AND INSTR(E.EVENCATE,'.') != 0
+                 AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) IN ('2','3')
+                 AND F.MINUFINA IS NOT NULL
+                 AND F.MAQUCODI LIKE 'CORTADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TCOR_CM,
+              (SELECT F.EMPRESA, F.NUMEOTRE, TO_CHAR(SUM(F.MINUFINA-F.MINUINIC)) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+               WHERE F.EMPRESA = E.EMPRESA
+                 AND F.EVENTIPO = E.EVENTIPO
+                 AND F.EVENCODI = E.EVENCODI
+                 AND INSTR(E.EVENCATE,'.') != 0
+                 AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) IN ('2','3')
+                 AND F.MINUFINA IS NOT NULL
+                 AND F.MAQUCODI LIKE 'LAMINADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TLAM_CM,
+              (SELECT F.EMPRESA, F.NUMEOTRE, TO_CHAR(SUM(F.MINUFINA-F.MINUINIC)) MINUTOS
+               FROM PRD_PRMAEVEN F, PRD_EVENTOS E
+               WHERE F.EMPRESA = E.EMPRESA
+                 AND F.EVENTIPO = E.EVENTIPO
+                 AND F.EVENCODI = E.EVENCODI
+                 AND INSTR(E.EVENCATE,'.') != 0
+                 AND SUBSTR(E.EVENCATE,1,INSTR(E.EVENCATE,'.') -1) IN ('2','3')
+                 AND F.MINUFINA IS NOT NULL
+                 AND F.MAQUCODI LIKE 'LAQUEADORA%'
+               GROUP BY F.EMPRESA, F.NUMEOTRE) TLAQ_CM,
+              (SELECT DISTINCT EMPRESA, NUMEOTRE, 'PARTICIPACION' PARTICIPACION
+               FROM PRD_PRMAEVEN
+               WHERE TRIM(SUBSTR(MAQUCODI,1,INSTR(MAQUCODI,' '))) = 'IMPRESORA' AND EVENTIPO = P_UTILIDAD.F_VALODEVA('TIEVMAQU')) PMON_CM,
+              (SELECT EMPRESA, NUMEOTRE, SUM(CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU
+               WHERE MAQUCODI LIKE 'IMPRESORA%'
+               GROUP BY EMPRESA, NUMEOTRE, TRIM(SUBSTR(MAQUCODI,1,INSTR(MAQUCODI,' ')))) MIMP_CM,
+              (SELECT EMPRESA, NUMEOTRE, SUM(CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU
+               WHERE MAQUCODI LIKE 'CORTADORA%'
+               GROUP BY EMPRESA, NUMEOTRE, TRIM(SUBSTR(MAQUCODI,1,INSTR(MAQUCODI,' ')))) MCOR_CM,
+              (SELECT EMPRESA, NUMEOTRE, SUM(CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU
+               WHERE MAQUCODI LIKE 'LAMINADORA%'
+               GROUP BY EMPRESA, NUMEOTRE, TRIM(SUBSTR(MAQUCODI,1,INSTR(MAQUCODI,' ')))) MLAM_CM,
+              (SELECT EMPRESA, NUMEOTRE, SUM(CANTPROD) CANTPROD
+               FROM PRD_PASAMAQU
+               WHERE MAQUCODI LIKE 'LAQUEADORA%'
+               GROUP BY EMPRESA, NUMEOTRE, TRIM(SUBSTR(MAQUCODI,1,INSTR(MAQUCODI,' ')))) MLAQ_CM,
+               
+--
+              (SELECT L.EMCODI, L.ASLOTE, SUM(F.LFIMPO) IMPORTE, SUM(F.LFIMPO * (NVL(F.LFPIVA,0)/100)) IVA
+                FROM FV_ASVEFA02 F, 
+                     (SELECT DISTINCT EMCODI, DICODI, ASCANA, CFNROF, CPNROP, ASLOTE FROM FV_ASVELO01 WHERE PROCED = 'F') L, 
+                     FIC_CABEOTRE O
+                WHERE F.EMCODI = L.EMCODI
+                  AND F.DICODI = L.DICODI
+                  AND F.ASCANA = L.ASCANA
+                  AND F.CFNROF = L.CFNROF
+                  AND F.CPNROP = L.CPNROP
+                  AND L.EMCODI = O.EMPRESA
+                  AND L.ASLOTE = TO_CHAR(O.NUMERO)
+                  AND L.CPNROP = O.NUMEPEDI
+                  AND (F.VATCOD = P_Utilidad.F_ValoDeva('TIARFIF4') OR 
+                       (F.VATCOD = P_Utilidad.F_ValoDeva('TIARGCF4') AND 
+                        EXISTS (SELECT 'X' FROM VALORES_LISTA LH --Articulos tipo C de Horas
+                                WHERE LH.CODIGO = 'GNR_ARTIHORA'
+                                  AND P_UTILIDAD.F_VALOCAMPO(LH.VALOR,'EMPRESA') = F.EMCODI 
+                                  AND P_UTILIDAD.F_VALOCAMPO(LH.VALOR,'TIP_ARTI') = F.VATCOD 
+                                  AND P_UTILIDAD.F_VALOCAMPO(LH.VALOR,'COD_ARTI') = F.ARCARF
+                               )
+                       )
+                      )
+                  AND NVL(L.CFNROF,0) != 0
+                  AND NOT EXISTS (SELECT 'X' FROM ANE_OBCOTRAZ T WHERE T.EMPRESA = L.EMCODI AND TO_CHAR(T.NUMERO_OT) = L.ASLOTE)
+                  AND F.PPTIPO NOT IN ('A','X','B','L','O') --A Abono Nacional, X Abono Exportacion, B Abono Mostrador, L Abono atipico Exp, O Abonos atipicos
+              GROUP BY L.EMCODI, L.ASLOTE
+              HAVING SUM(F.LFIMPO) > 0
+              ) PRE,
+              (SELECT R.EMPRESA, R.NUMELOTE, SUM(NVL(A.IMPOABON,0)) IMPOABON, SUM(NVL(A.IMPONUFA,0)) IMPONUFA, SUM(NVL(A.IMPOABON,0) - NVL(A.IMPONUFA,0)) IMPORTE 
+               FROM RCL_RECLCLIE R, RCL_ACCIONES A, RCL_ACCICOMP AC
+               WHERE R.EMPRESA = A.EMPRESA
+                 AND R.NUMERCL = A.NUMERCL
+                 AND R.ANNO = A.ANNO
+                 AND A.EMPRESA = AC.EMPRESA
+                 AND A.NUMERCL = AC.NUMERCL
+                 AND A.ANNO = AC.ANNO
+                 AND A.NUMEORDE = AC.NUMEORDE
+                 AND A.TIPOACCI = 'ABONO' AND A.APROCONT = 'S' 
+                 AND EXISTS (SELECT 'X' FROM RCL_INOCABON I
+                             WHERE AC.TIPOABON = I.TIPIFICA
+                               AND I.TIPOIMPU = 'AFECTA A OT')
+               GROUP BY R.EMPRESA, R.NUMELOTE
+              ) ABO,
+              (SELECT R.EMPRESA, R.NUMELOTE, SUM(NVL(A.IMPOABON,0)) IMPOABON, SUM(NVL(A.IMPONUFA,0)) IMPONUFA, SUM(NVL(A.IMPOABON, 0) - NVL(A.IMPONUFA, 0)) IMPORTE 
+               FROM RCL_RECLCLIE R, RCL_ACCIONES A, RCL_ACCICOMP AC
+               WHERE R.EMPRESA = A.EMPRESA
+                 AND R.NUMERCL = A.NUMERCL
+                 AND R.ANNO = A.ANNO
+                 AND A.EMPRESA = AC.EMPRESA
+                 AND A.NUMERCL = AC.NUMERCL
+                 AND A.ANNO = AC.ANNO
+                 AND A.NUMEORDE = AC.NUMEORDE
+                 AND A.TIPOACCI = 'ABONO' AND A.APROCONT = 'S' 
+                 AND EXISTS (SELECT 'X' FROM RCL_INOCABON I
+                             WHERE AC.TIPOABON = I.TIPIFICA
+                               AND I.TIPOIMPU IN ('AFECTA A CLIENTE','AFECTA A LFS','AFECTA A LINEA','AFECTA A TIPO ARTICULO'))
+                 AND NOT EXISTS (SELECT 'X' FROM RCL_INOCABON I
+                                 WHERE AC.TIPOABON = I.TIPIFICA
+                                   AND I.TIPOIMPU = 'AFECTA A OT')
+               GROUP BY R.EMPRESA, R.NUMELOTE
+              ) OABO,
+              (
+               SELECT F.EMPRESA, F.TIP_ARTI, F.PRODUCTO, F.MODI, F.REVI, F.ANCHO, F.LARGO, F.MATBASE, L.FCKG, L.DESCRIPCION FROM HFICTEC F, LFS L
+               WHERE F.EMPRESA = L.EMPRESA
+                 AND F.MATBASE = L.COD_LFS
+               UNION
+               SELECT F.EMPRESA, F.TIP_ARTI, F.PRODUCTO, F.MODI, F.REVI, F.ANCHO, F.LARGO, F.MATBASE, L.FCKG, L.DESCRIPCION FROM FIC_SEGESTI F, LFS L
+               WHERE F.EMPRESA = L.EMPRESA
+                 AND F.MATBASE = L.COD_LFS
+              ) FI,
+              (SELECT CP.EMPRESA, CP.NUMEPEDI, NULL REFEENPM, CP.DIREENVI, DE.PAIS, DE.NOMBRE
+               FROM FIC_CABEPEDI CP, 
+                    (SELECT DE.EMPRESA, DE.CLIENTE_ID, DE.LINEA, DE.PAIS, PA.NOMBRE FROM GNR_CLDIRENV DE, GNR_PAISES PA
+                     WHERE DE.PAIS = PA.PAIS(+)) DE
+               WHERE CP.EMPRESA = DE.EMPRESA(+)
+                 AND CP.CLIENTE_ID = DE.CLIENTE_ID(+)
+                 AND CP.DIREENVI = DE.LINEA(+)
+               UNION
+               SELECT CP.EMPRESA, CP.NUMEPEDI, NULL REFEENPM, CP.DIREENVI, DE.PAIS, DE.NOMBRE
+               FROM FIC_HICAPEVE CP, 
+                    (SELECT DE.EMPRESA, DE.CLIENTE_ID, DE.LINEA, DE.PAIS, PA.NOMBRE FROM GNR_CLDIRENV DE, GNR_PAISES PA
+                     WHERE DE.PAIS = PA.PAIS(+)) DE
+               WHERE CP.EMPRESA = DE.EMPRESA(+)
+                 AND CP.CLIENTE_ID = DE.CLIENTE_ID(+)
+                 AND CP.DIREENVI = DE.LINEA(+)
+               UNION
+               SELECT CP.EMPRESA, CP.NUMEPEDI, CP.REFEENPM, NULL DIREENVI, NULL PAIS, NULL NOMBRE FROM FIC_CABEPEMA CP) P,
+              (SELECT EMPRESA, NUMERO, ANNO, VALOR FROM FIC_LICHOBOT
+               WHERE CODIGO = P_Utilidad.F_ValoDeva('COOTPEPC')) MPC,
+              (SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_LINEPEDI
+               UNION 
+               SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_HILIPEVE
+               UNION
+               SELECT EMPRESA, NUMEPEDI, LINEPEDI, TIPOPEDI FROM FIC_LINEPEMA) LP,
+              (SELECT O.EMPRESA,O.NUMERO, A.VUCVEN, SUM(A.LACANT) LPCANT --Unidad y Cantidad de Expedición de Albaranes
+                FROM FV_ASVEALH02 A, 
+                     FIC_CABEOTRE O,
+                     (SELECT DISTINCT EMCODI, CPNROP, ASLOTE, ALNROP, VATCOD, ARCARF, CFNROF FROM FV_ASVELO01 WHERE PROCED = 'F') L
+                      WHERE A.EMCODI = O.EMPRESA
+                        AND A.VATCOD = O.TIP_ARTI
+                        AND A.ARCARF = O.COD_ARTI
+                        AND A.DICODI = '01'
+                        AND A.ASCANA = 1
+                        AND A.CPNROP = O.NUMEPEDI
+                        AND L.EMCODI = A.EMCODI
+                        AND L.ALNROP = A.ALNROP
+                        AND L.VATCOD = A.VATCOD
+                        AND L.ARCARF = A.ARCARF
+                        AND L.CPNROP = A.CPNROP
+                        AND L.EMCODI = O.EMPRESA
+                        AND L.ASLOTE = TO_CHAR(O.NUMERO)
+                        AND L.CPNROP = O.NUMEPEDI
+                        AND NVL(L.CFNROF,0) != 0
+                        AND EXISTS (SELECT 'X' FROM FV_ASVEFA02 F
+                                   WHERE F.EMCODI = O.EMPRESA
+                                     AND F.DICODI = '01'
+                                     AND F.ASCANA = 1
+                                     AND F.CPNROP = O.NUMEPEDI
+                                     AND F.VATCOD = O.TIP_ARTI
+                                     AND F.ARCARF = O.COD_ARTI)--Este Facturada la OT
+                        AND NOT EXISTS (SELECT 'X' FROM FIC_LINEPEDI P
+                                        WHERE P.EMPRESA = O.EMPRESA
+                                          AND P.NUMEPEDI = O.NUMEPEDI
+                                          AND P.TIP_ARTI = O.TIP_ARTI
+                                          AND P.COD_ARTI = O.COD_ARTI)--No quede Pendiente nada por Generar Albaran
+                        AND O.TIP_ARTI = P_Utilidad.F_ValoDeva('TIARFIF4')
+                   GROUP BY O.EMPRESA,O.NUMERO, A.VUCVEN
+                   HAVING SUM(A.LACANT) > 0) EX
+         WHERE O.EMPRESA = A.EMPRESA
+           AND O.TIP_ARTI = A.TIP_ARTI
+           AND O.COD_ARTI = A.COD_ARTI
+           AND O.EMPRESA = P.EMPRESA(+)
+           AND O.NUMEPEDI = P.NUMEPEDI(+)
+           AND O.EMPRESA = MPC.EMPRESA(+)
+           AND O.NUMERO = MPC.NUMERO(+)
+           AND O.ANNO = MPC.ANNO(+)
+           AND O.EMPRESA = LP.EMPRESA(+)
+           AND O.NUMEPEDI = LP.NUMEPEDI(+)
+           AND O.LINEPEDI = LP.LINEPEDI(+)
+           AND A.EMPRESA = CL.EMPRESA(+)
+           AND A.CLIENASOC = CL.CLIENTE_ID(+)
+           AND O.EMPRESA = FI.EMPRESA(+)
+           AND O.TIP_ARTI = FI.TIP_ARTI(+)
+           AND O.COD_ARTI = FI.PRODUCTO(+)
+           AND NVL(O.MODI,0) = NVL(FI.MODI(+),0)
+           AND NVL(O.REVI,0) = NVL(FI.REVI(+),0)
+           AND O.EMPRESA = EX.EMPRESA(+)
+           AND O.NUMERO = EX.NUMERO(+)
+           AND SUBSTR(FI.MATBASE,1,2) = LIN.LINEA
+           AND O.EMPRESA = ABO.EMPRESA(+)
+           AND O.NUMERO = ABO.NUMELOTE(+)
+           AND O.EMPRESA = OABO.EMPRESA(+)
+           AND O.NUMERO = OABO.NUMELOTE(+)
+           AND O.EMPRESA = PRE.EMCODI(+)
+           AND TO_CHAR(O.NUMERO) = PRE.ASLOTE(+)
+           AND O.EMPRESA = MIMP.EMPRESA(+)
+           AND O.NUMERO = MIMP.NUMEOTRE(+)
+           AND O.EMPRESA = MLAQ.EMPRESA(+)
+           AND O.NUMERO = MLAQ.NUMEOTRE(+)
+           AND O.EMPRESA = MLAM.EMPRESA(+)
+           AND O.NUMERO = MLAM.NUMEOTRE(+)
+           AND O.EMPRESA = MMON.EMPRESA(+)
+           AND O.NUMERO = MMON.NUMEOTRE(+)
+           AND O.EMPRESA = MCOR.EMPRESA(+)
+           AND O.NUMERO = MCOR.NUMEOTRE(+)
+           AND O.EMPRESA = TIMP.EMPRESA(+)
+           AND O.NUMERO = TIMP.NUMEOTRE(+)
+           AND O.EMPRESA = TLAQ.EMPRESA(+)
+           AND O.NUMERO = TLAQ.NUMEOTRE(+)
+           AND O.EMPRESA = TLAM.EMPRESA(+)
+           AND O.NUMERO = TLAM.NUMEOTRE(+)
+           AND O.EMPRESA = TMON.EMPRESA(+)
+           AND O.NUMERO = TMON.NUMEOTRE(+)
+           AND O.EMPRESA = TCOR.EMPRESA(+)
+           AND O.NUMERO = TCOR.NUMEOTRE(+)
+           AND O.EMPRESA = NUCA.EMPRESA(+)
+           AND O.NUMERO = NUCA.NUMERO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = PCFI.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = OPCI.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'MM') = OPCI.MES_NUMERO(+)
+           AND O.EMPRESA = TIMP_CM.EMPRESA(+)
+           AND O.NUMERO = TIMP_CM.NUMEOTRE(+)
+           AND O.EMPRESA = TLAM_CM.EMPRESA(+)
+           AND O.NUMERO = TLAM_CM.NUMEOTRE(+)
+           AND O.EMPRESA = TLAQ_CM.EMPRESA(+)
+           AND O.NUMERO = TLAQ_CM.NUMEOTRE(+)
+           AND O.EMPRESA = TCOR_CM.EMPRESA(+)
+           AND O.NUMERO = TCOR_CM.NUMEOTRE(+)
+           AND O.EMPRESA = PMON_CM.EMPRESA(+)
+           AND O.NUMERO = PMON_CM.NUMEOTRE(+)
+           AND O.EMPRESA = MIMP_CM.EMPRESA(+)
+           AND O.NUMERO = MIMP_CM.NUMEOTRE(+)
+           AND O.EMPRESA = MLAM_CM.EMPRESA(+)
+           AND O.NUMERO = MLAM_CM.NUMEOTRE(+)
+           AND O.EMPRESA = MLAQ_CM.EMPRESA(+)
+           AND O.NUMERO = MLAQ_CM.NUMEOTRE(+)
+           AND O.EMPRESA = MCOR_CM.EMPRESA(+)
+           AND O.NUMERO = MCOR_CM.NUMEOTRE(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = COSE_IMP.ANNO(+)
+           AND COSE_IMP.DESCRIPCION_SECCION(+) = 'IMPRESORA'
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = COSE_COR.ANNO(+)
+           AND COSE_COR.DESCRIPCION_SECCION(+) = 'CORTADORA'
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = COSE_LAM.ANNO(+)
+           AND COSE_LAM.DESCRIPCION_SECCION(+) = 'LAMINADORA'
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = COSE_LAQ.ANNO(+)
+           AND COSE_LAQ.DESCRIPCION_SECCION(+) = 'LAQUEADORA'
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = COSE_MON.ANNO(+)
+           AND COSE_MON.DESCRIPCION_SECCION(+) = 'MONTAJE'
+           AND O.EMPRESA = MAA.EMPRESA(+)
+           AND O.NUMERO = MAA.NUMERO_OT(+)
+           AND O.EMPRESA = MAE.APLICA_A_EMPRESA_GRUPO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAE.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAEG.ANNO(+)
+           --
+           AND O.EMPRESA = MAEI.APLICA_A_EMPRESA_GRUPO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAEI.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAEGI.ANNO(+)
+           --
+           AND O.EMPRESA = MAELQ.APLICA_A_EMPRESA_GRUPO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAELQ.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAEGLQ.ANNO(+)
+           --
+           AND O.EMPRESA = MAELA.APLICA_A_EMPRESA_GRUPO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAELA.ANNO(+)
+           AND TO_CHAR(O.FEC_MODI,'YYYY') = MAEGLA.ANNO(+)
+           --
+           AND O.EMPRESA = OLQ.EMPRESA(+)
+           AND O.NUMERO = OLQ.NUMERO(+)
+           AND O.ANNO = OLQ.ANNO(+)
+           AND O.EMPRESA = OLA.EMPRESA(+)
+           AND O.NUMERO = OLA.NUMERO(+)
+           AND O.ANNO = OLA.ANNO(+);
+           --
+           --AND TO_CHAR(O.FEC_MODI,'YYYY') = CHP.ANNO(+);
